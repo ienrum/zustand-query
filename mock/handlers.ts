@@ -18,6 +18,10 @@ export const handlers = [
     return HttpResponse.error()
   }),
 
+  http.post("/error", () => {
+    return HttpResponse.error()
+  }),
+
   http.post("/user", async ({ request }) => {
     const newUser = (await request.json()) as requestUser
     datas.push({ id: datas.length + 1, name: newUser.name })
@@ -34,7 +38,7 @@ export const handlers = [
     const updatedUser = (await request.json()) as requestUser
     datas[datas.indexOf(data)] = { id: data.id, name: updatedUser.name }
 
-    return HttpResponse.json(updatedUser)
+    return HttpResponse.json(updatedUser, { status: 200 })
   }),
 
   http.delete("/user/:id", ({ params }) => {
@@ -44,6 +48,6 @@ export const handlers = [
     }
 
     datas.splice(datas.indexOf(data), 1)
-    return HttpResponse.json(data)
+    return HttpResponse.json(data, { status: 200 })
   }),
 ]

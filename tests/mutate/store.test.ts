@@ -10,7 +10,7 @@ import {
   vi,
 } from "vitest"
 import axios, { AxiosError } from "axios"
-import useFetch from "../../src/fetch/useFetch"
+import useMutate from "../../src/mutate/useMutate"
 
 // Define test data, (this could be an API response)
 interface TestDatas {
@@ -27,25 +27,28 @@ beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
-describe("fetchData", () => {
-  it("should fetch data successfully", async () => {
+describe("mutateData", () => {
+  it("should post data successfully", async () => {
     const { result, waitFor } = renderHook(() =>
-      useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/1"),
+      useMutate({
+        onMutate: () =>
+          axios.post("/user", {
+            name: "John Doe",
+          }),
       })
     )
 
     await waitFor(() => result.current.isSettled)
 
-    expect(result.current.data?.data).toMatchObject(testDatas[0])
+    expect(result.current.data?.status === 201).toBeTruthy()
     expect(result.current.error).toBeNull()
     expect(result.current.status).toBe("success")
   })
 
   it("should handle a server error", async () => {
     const { result, waitFor } = renderHook(() =>
-      useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/3"),
+      useMutate({
+        onMutate: () => axios.post("/incorrect-path", { name: "John Doe" }),
       })
     )
     await waitFor(() => result.current.isSettled)
@@ -56,8 +59,8 @@ describe("fetchData", () => {
 
   it("should handle a network error", async () => {
     const { result, waitFor } = renderHook(() =>
-      useFetch({
-        onFetch: () => axios.get<TestDatas>("/error"),
+      useMutate({
+        onMutate: () => axios.post("/error", { name: "John Doe" }),
       })
     )
     await waitFor(() => result.current.isSettled)
@@ -69,46 +72,56 @@ describe("fetchData", () => {
 
 describe("axios and fetch tests", () => {
   it("should be success by fetch api", async () => {
-    const fetchUser1 = () => fetch("/user/1")
-
     const { result, waitFor } = renderHook(() =>
-      useFetch({
-        onFetch: fetchUser1,
+      useMutate({
+        onMutate: () => {
+          const response = fetch("/user", {
+            method: "POST",
+            body: JSON.stringify({ name: "John Doe" }),
+          })
+
+          return response
+        },
       })
     )
+
     await waitFor(() => result.current.isSettled)
 
-    expect(await result.current.data?.json()).toMatchObject(testDatas[0])
-    expect(result.current.status).toBe("success")
+    expect(result.current.data?.status === 201).toBeTruthy()
     expect(result.current.error).toBeNull()
+    expect(result.current.status).toBe("success")
   })
 
   it("should be success by axios api", async () => {
     const { result, waitFor } = renderHook(() =>
-      useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/2"),
+      useMutate({
+        onMutate: () => axios.post("/user", { name: "John Doe" }),
       })
     )
 
     await waitFor(() => result.current.isSettled)
 
-    expect(result.current.data?.data).toMatchObject(testDatas[1])
+    expect(result.current.data?.status === 201).toBeTruthy()
     expect(result.current.status).toBe("success")
     expect(result.current.error).toBeNull()
   })
 
   it("should be error by fetch api", async () => {
-    const fetchUser3 = () => fetch("/user/3")
+    const fetchUser3 = () =>
+      fetch("/invalid-path", {
+        method: "POST",
+        body: JSON.stringify({ name: "John Doe" }),
+      })
 
     const { result, waitFor } = renderHook(() =>
-      useFetch({
-        onFetch: fetchUser3,
+      useMutate({
+        onMutate: fetchUser3,
       })
     )
 
     await waitFor(() => result.current.isSettled)
 
-    expect(result.current.data?.ok).toBe(false)
+    expect(result.current.status).toBe("error")
   })
 })
 
@@ -117,8 +130,8 @@ describe("onSuccess and onError", () => {
     const mockFn = vi.fn()
 
     const { result, waitFor } = renderHook(() =>
-      useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/1"),
+      useMutate({
+        onMutate: () => axios.post("/user", { name: "John Doe" }),
         onSuccess: (data) => mockFn(),
       })
     )
@@ -135,12 +148,11 @@ describe("onSuccess and onError", () => {
     const mockFn = vi.fn()
 
     const { result, waitFor } = renderHook(() =>
-      useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/3"),
+      useMutate({
+        onMutate: () => axios.post("/invalid-path", { name: "John Doe" }),
         onError: (error: AxiosError) => mockFn(),
       })
     )
-    const consoleSpy = vi.spyOn(console, "info")
 
     await waitFor(() => result.current.isSettled)
 
