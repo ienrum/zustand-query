@@ -67,7 +67,7 @@ describe("fetchData", () => {
   })
 })
 
-describe("config store", () => {
+describe("axios and fetch tests", () => {
   it("should be success by fetch api", async () => {
     const fetchUser1 = async () => await fetch("/user/1")
 
