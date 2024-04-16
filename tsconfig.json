@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "esnext", // 컴파일할 JavaScript 버전
+    "module": "esnext", // 모듈 시스템
+    "jsx": "preserve", // JSX를 보존 (Babel이 처리)
+    "strict": true, // 엄격한 타입 체킹 활성화
+    "moduleResolution": "node", // node 방식의 모듈 해석
+    "esModuleInterop": true, // default export와의 호환성 보장
+    "skipLibCheck": true, // 성능을 위해 라이브러리 파일의 타입 체크 생략
+    "forceConsistentCasingInFileNames": true, // 파일 이름의 대소문자 일관성 강제
+    "outDir": "./dist" // 출력 디렉터리
+  },
+  "include": ["src/**/*"], // 타입 체크를 포함할 파일들
+  "exclude": ["node_modules"] // 제외할 디렉터리
+}
