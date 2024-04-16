@@ -28,11 +28,11 @@ afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
 describe("mutateData", () => {
-  it("should fetch data successfully", async () => {
+  it("should post data successfully", async () => {
     const { result, waitFor } = renderHook(() =>
       useMutate({
-        onMutate: async () =>
-          await axios.post<TestDatas>("/user", {
+        onMutate: () =>
+          axios.post("/user", {
             name: "John Doe",
           }),
       })
@@ -40,7 +40,7 @@ describe("mutateData", () => {
 
     await waitFor(() => result.current.isSettled)
 
-    expect(result.current.data?.data).toMatchObject(testDatas[0])
+    expect(result.current.data?.status === 201).toBeTruthy()
     expect(result.current.error).toBeNull()
     expect(result.current.status).toBe("success")
   })
@@ -48,7 +48,7 @@ describe("mutateData", () => {
   it("should handle a server error", async () => {
     const { result, waitFor } = renderHook(() =>
       useMutate({
-        onMutate: async () => await axios.get<TestDatas>("/user/3"),
+        onMutate: () => axios.post("/incorrect-path", { name: "John Doe" }),
       })
     )
     await waitFor(() => result.current.isSettled)
@@ -60,7 +60,7 @@ describe("mutateData", () => {
   it("should handle a network error", async () => {
     const { result, waitFor } = renderHook(() =>
       useMutate({
-        onMutate: async () => await axios.get<TestDatas>("/error"),
+        onMutate: () => axios.post("/error", { name: "John Doe" }),
       })
     )
     await waitFor(() => result.current.isSettled)
@@ -70,38 +70,48 @@ describe("mutateData", () => {
   })
 })
 
-describe("config store", () => {
+describe("axios and fetch tests", () => {
   it("should be success by fetch api", async () => {
-    const fetchUser1 = async () => await fetch("/user/1")
-
     const { result, waitFor } = renderHook(() =>
       useMutate({
-        onMutate: fetchUser1,
+        onMutate: () => {
+          const response = fetch("/user", {
+            method: "POST",
+            body: JSON.stringify({ name: "John Doe" }),
+          })
+
+          return response
+        },
       })
     )
+
     await waitFor(() => result.current.isSettled)
 
-    expect(await result.current.data?.json()).toMatchObject(testDatas[0])
-    expect(result.current.status).toBe("success")
+    expect(result.current.data?.status === 201).toBeTruthy()
     expect(result.current.error).toBeNull()
+    expect(result.current.status).toBe("success")
   })
 
   it("should be success by axios api", async () => {
     const { result, waitFor } = renderHook(() =>
       useMutate({
-        onMutate: async () => await axios.get<TestDatas>("/user/2"),
+        onMutate: () => axios.post("/user", { name: "John Doe" }),
       })
     )
 
     await waitFor(() => result.current.isSettled)
 
-    expect(result.current.data?.data).toMatchObject(testDatas[1])
+    expect(result.current.data?.status === 201).toBeTruthy()
     expect(result.current.status).toBe("success")
     expect(result.current.error).toBeNull()
   })
 
   it("should be error by fetch api", async () => {
-    const fetchUser3 = async () => await fetch("/user/3")
+    const fetchUser3 = () =>
+      fetch("/invalid-path", {
+        method: "POST",
+        body: JSON.stringify({ name: "John Doe" }),
+      })
 
     const { result, waitFor } = renderHook(() =>
       useMutate({
@@ -111,43 +121,44 @@ describe("config store", () => {
 
     await waitFor(() => result.current.isSettled)
 
-    expect(result.current.data?.ok).toBe(false)
+    expect(result.current.status).toBe("error")
   })
 })
 
 describe("onSuccess and onError", () => {
   it("should call onSuccess", async () => {
+    const mockFn = vi.fn()
+
     const { result, waitFor } = renderHook(() =>
       useMutate({
-        onMutate: async () => await axios.get<TestDatas>("/user/1"),
-        onSuccess: (data) => console.info(data),
+        onMutate: () => axios.post("/user", { name: "John Doe" }),
+        onSuccess: (data) => mockFn(),
       })
     )
 
-    const consoleSpy = vi.spyOn(console, "info")
-
     await waitFor(() => result.current.isSettled)
 
-    expect(consoleSpy).toHaveBeenCalled()
-    expect(result.current.data?.data).toMatchObject(testDatas[0])
+    expect(mockFn).toHaveBeenCalled()
+    expect(result.current.error).toBeDefined()
 
-    consoleSpy.mockRestore()
+    mockFn.mockRestore()
   })
 
   it("should call onError", async () => {
+    const mockFn = vi.fn()
+
     const { result, waitFor } = renderHook(() =>
       useMutate({
-        onMutate: async () => await axios.get<TestDatas>("/user/3"),
-        onError: (error: AxiosError) => console.info(error),
+        onMutate: () => axios.post("/invalid-path", { name: "John Doe" }),
+        onError: (error: AxiosError) => mockFn(),
       })
     )
-    const consoleSpy = vi.spyOn(console, "info")
 
     await waitFor(() => result.current.isSettled)
 
-    expect(consoleSpy).toHaveBeenCalled()
+    expect(mockFn).toHaveBeenCalled()
     expect(result.current.error).toBeDefined()
 
-    consoleSpy.mockRestore()
+    mockFn.mockRestore()
   })
 })

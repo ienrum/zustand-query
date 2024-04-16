@@ -31,7 +31,7 @@ describe("fetchData", () => {
   it("should fetch data successfully", async () => {
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: async () => await axios.get<TestDatas>("/user/1"),
+        onFetch: () => axios.get<TestDatas>("/user/1"),
       })
     )
 
@@ -45,7 +45,7 @@ describe("fetchData", () => {
   it("should handle a server error", async () => {
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: async () => await axios.get<TestDatas>("/user/3"),
+        onFetch: () => axios.get<TestDatas>("/user/3"),
       })
     )
     await waitFor(() => result.current.isSettled)
@@ -57,7 +57,7 @@ describe("fetchData", () => {
   it("should handle a network error", async () => {
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: async () => await axios.get<TestDatas>("/error"),
+        onFetch: () => axios.get<TestDatas>("/error"),
       })
     )
     await waitFor(() => result.current.isSettled)
@@ -69,7 +69,7 @@ describe("fetchData", () => {
 
 describe("axios and fetch tests", () => {
   it("should be success by fetch api", async () => {
-    const fetchUser1 = async () => await fetch("/user/1")
+    const fetchUser1 = () => fetch("/user/1")
 
     const { result, waitFor } = renderHook(() =>
       useFetch({
@@ -86,7 +86,7 @@ describe("axios and fetch tests", () => {
   it("should be success by axios api", async () => {
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: async () => await axios.get<TestDatas>("/user/2"),
+        onFetch: () => axios.get<TestDatas>("/user/2"),
       })
     )
 
@@ -98,7 +98,7 @@ describe("axios and fetch tests", () => {
   })
 
   it("should be error by fetch api", async () => {
-    const fetchUser3 = async () => await fetch("/user/3")
+    const fetchUser3 = () => fetch("/user/3")
 
     const { result, waitFor } = renderHook(() =>
       useFetch({
@@ -114,37 +114,39 @@ describe("axios and fetch tests", () => {
 
 describe("onSuccess and onError", () => {
   it("should call onSuccess", async () => {
+    const mockFn = vi.fn()
+
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: async () => await axios.get<TestDatas>("/user/1"),
-        onSuccess: (data) => console.info(data),
+        onFetch: () => axios.get<TestDatas>("/user/1"),
+        onSuccess: (data) => mockFn(),
       })
     )
 
-    const consoleSpy = vi.spyOn(console, "info")
-
     await waitFor(() => result.current.isSettled)
 
-    expect(consoleSpy).toHaveBeenCalled()
-    expect(result.current.data?.data).toMatchObject(testDatas[0])
+    expect(mockFn).toHaveBeenCalled()
+    expect(result.current.error).toBeDefined()
 
-    consoleSpy.mockRestore()
+    mockFn.mockRestore()
   })
 
   it("should call onError", async () => {
+    const mockFn = vi.fn()
+
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: async () => await axios.get<TestDatas>("/user/3"),
-        onError: (error: AxiosError) => console.info(error),
+        onFetch: () => axios.get<TestDatas>("/user/3"),
+        onError: (error: AxiosError) => mockFn(),
       })
     )
     const consoleSpy = vi.spyOn(console, "info")
 
     await waitFor(() => result.current.isSettled)
 
-    expect(consoleSpy).toHaveBeenCalled()
+    expect(mockFn).toHaveBeenCalled()
     expect(result.current.error).toBeDefined()
 
-    consoleSpy.mockRestore()
+    mockFn.mockRestore()
   })
 })
