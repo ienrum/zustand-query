@@ -18,13 +18,13 @@ def get_ai_review(text):
   return completion.choices[0].message
 
 # GitHub API를 통해 PR에서 코드 변경 사항 가져오기
-def fetch_pr_code_changes(repo, pr_number):
+def fetch_pr_code_changes(repo,owner, pr_number):
     github_token = os.getenv('GITHUB_TOKEN')
     headers = {
         "Authorization": f"Bearer {github_token}",
         "Accept": "application/vnd.github.v3+json"
     }
-    url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}/files"
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
     response = requests.get(url, headers=headers)
     file_changes = response.json()
     code_snippets = []
@@ -50,8 +50,9 @@ def post_review_to_github(repo, pr_number, review):
 # 메인 로직
 if __name__ == "__main__":
     repo = 'ienrum/zustand-query'  # 사용자 이름과 리포지토리 이름 설정
+    owner = 'ienrum'
     pr_number = sys.argv[1]  # PR 번호를 명령줄 인수로부터 받아옵니다.
-    code_changes = fetch_pr_code_changes(repo, pr_number)
+    code_changes = fetch_pr_code_changes(repo,owner, pr_number)
     if code_changes:
         review = get_ai_review(code_changes)
         result = post_review_to_github(repo, pr_number, review)
