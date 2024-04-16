@@ -19,3 +19,4 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # Optional
           LANGUAGE: Korean
+          MODEL: gpt-4
