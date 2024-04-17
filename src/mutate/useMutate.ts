@@ -21,12 +21,7 @@ const useFetch = <TData = void, TResponse = any, TError = Error>({
   const store = useStore()
 
   useEffect(() => {
-    onError && store.error && onError(store.error)
-    onSuccess && store.data && onSuccess(store.data)
-  }, [store.status])
-
-  useEffect(() => {
-    onMutate && store.mutateData(onMutate)
+    onMutate && store.mutateData(onMutate, onSuccess, onError)
   }, [])
 
   const mutate = (
@@ -35,9 +30,7 @@ const useFetch = <TData = void, TResponse = any, TError = Error>({
     onSuccess?: (data: TResponse) => void
   ) => {
     if (mutateFn) {
-      store.mutateData(() => mutateFn(data))
-      onError && store.error && onError(store.error)
-      onSuccess && store.data && onSuccess(store.data)
+      store.mutateData(() => mutateFn(data), onSuccess, onError)
     }
   }
 

@@ -17,12 +17,7 @@ const useFetch = <TResponse, TError = Error>({
   const store = useStore()
 
   useEffect(() => {
-    onError && store.error && onError(store.error)
-    onSuccess && store.data && onSuccess(store.data)
-  }, [store.status])
-
-  useEffect(() => {
-    store.fetchData(fetchFn)
+    store.fetchData(fetchFn, onSuccess, onError)
   }, [])
 
   return store
