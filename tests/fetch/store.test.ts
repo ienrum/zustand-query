@@ -31,7 +31,7 @@ describe("fetchData", () => {
   it("should fetch data successfully", async () => {
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/1"),
+        fetchFn: () => axios.get<TestDatas>("/user/1"),
       })
     )
 
@@ -45,7 +45,7 @@ describe("fetchData", () => {
   it("should handle a server error", async () => {
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/3"),
+        fetchFn: () => axios.get<TestDatas>("/user/3"),
       })
     )
     await waitFor(() => result.current.isSettled)
@@ -57,7 +57,7 @@ describe("fetchData", () => {
   it("should handle a network error", async () => {
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: () => axios.get<TestDatas>("/error"),
+        fetchFn: () => axios.get<TestDatas>("/error"),
       })
     )
     await waitFor(() => result.current.isSettled)
@@ -73,7 +73,7 @@ describe("axios and fetch tests", () => {
 
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: fetchUser1,
+        fetchFn: fetchUser1,
       })
     )
     await waitFor(() => result.current.isSettled)
@@ -86,7 +86,7 @@ describe("axios and fetch tests", () => {
   it("should be success by axios api", async () => {
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/2"),
+        fetchFn: () => axios.get<TestDatas>("/user/2"),
       })
     )
 
@@ -102,7 +102,7 @@ describe("axios and fetch tests", () => {
 
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: fetchUser3,
+        fetchFn: fetchUser3,
       })
     )
 
@@ -118,7 +118,7 @@ describe("onSuccess and onError", () => {
 
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/1"),
+        fetchFn: () => axios.get<TestDatas>("/user/1"),
         onSuccess: (data) => mockFn(),
       })
     )
@@ -136,7 +136,7 @@ describe("onSuccess and onError", () => {
 
     const { result, waitFor } = renderHook(() =>
       useFetch({
-        onFetch: () => axios.get<TestDatas>("/user/3"),
+        fetchFn: () => axios.get<TestDatas>("/user/3"),
         onError: (error: AxiosError) => mockFn(),
       })
     )

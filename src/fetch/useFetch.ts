@@ -2,13 +2,13 @@ import { useEffect, useState } from "react"
 import { createUseFetchStore } from "./fetchStore"
 
 interface UseFetchParams<TResponse, TError> {
-  onFetch: () => Promise<TResponse>
+  fetchFn: () => Promise<TResponse>
   onError?: (error: TError) => void
   onSuccess?: (data: TResponse) => void
 }
 
 const useFetch = <TResponse, TError = Error>({
-  onFetch,
+  fetchFn,
   onError,
   onSuccess,
 }: UseFetchParams<TResponse, TError>) => {
@@ -22,7 +22,7 @@ const useFetch = <TResponse, TError = Error>({
   }, [store.status])
 
   useEffect(() => {
-    store.fetchData(onFetch)
+    store.fetchData(fetchFn)
   }, [])
 
   return store
