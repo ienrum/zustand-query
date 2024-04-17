@@ -162,3 +162,61 @@ describe("onSuccess and onError", () => {
     mockFn.mockRestore()
   })
 })
+
+describe("mutate with mutateFn", () => {
+  it("should post data successfully", async () => {
+    const { result, waitFor } = renderHook(() =>
+      useMutate({
+        mutateFn: (data: string) =>
+          axios.post("/user", {
+            name: "John Doe",
+            nickName: data,
+          }),
+      })
+    )
+
+    result.current.mutate("e")
+
+    await waitFor(() => result.current.isSettled)
+
+    expect(result.current.data?.status === 201).toBeTruthy()
+    expect(result.current.error).toBeNull()
+    expect(result.current.status).toBe("success")
+  })
+
+  it("should handle a server error", async () => {
+    const { result, waitFor } = renderHook(() =>
+      useMutate({
+        mutateFn: () =>
+          axios.post("/incorrect-path", {
+            name: "John Doe",
+          }),
+      })
+    )
+
+    result.current.mutate()
+
+    await waitFor(() => result.current.isSettled)
+
+    expect(result.current.error).not.toBeNull()
+    expect(result.current.status).toBe("error")
+  })
+
+  it("should handle a network error", async () => {
+    const { result, waitFor } = renderHook(() =>
+      useMutate({
+        mutateFn: (data: string) =>
+          axios.post("/error", {
+            name: "John Doe",
+            nickName: data,
+          }),
+      })
+    )
+
+    result.current.mutate("pickachu")
+    await waitFor(() => result.current.isSettled)
+
+    expect(result.current.error).toBeDefined()
+    expect(result.current.status).toBe("error")
+  })
+})
