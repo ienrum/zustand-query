@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { StoreStateType } from "../state"
 
 type mutateData<TResponse, TError> = (
   mutateFn: () => Promise<TResponse>,
@@ -6,16 +7,15 @@ type mutateData<TResponse, TError> = (
   onError?: (error: TError) => void
 ) => Promise<void>
 
-interface StoreState<TResponse, TError> {
-  data: TResponse | null
-  error: TError | null
-  status: "idle" | "loading" | "success" | "error"
-  isSettled: boolean
+interface StoreActionType<TResponse, TError> {
   mutateData: mutateData<TResponse, TError>
 }
 
+type StoreType<TResponse, TError> = StoreStateType<TResponse, TError> &
+  StoreActionType<TResponse, TError>
+
 export const createUseMutateStore = <TResponse, TError>() =>
-  create<StoreState<TResponse, TError>>((set) => ({
+  create<StoreType<TResponse, TError>>((set) => ({
     data: null,
     error: null,
     status: "idle",
